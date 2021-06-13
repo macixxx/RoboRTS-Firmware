@@ -67,5 +67,5 @@ void beep_set_tune(uint16_t tune, uint16_t ctrl);
 int32_t beep_set_times(uint8_t times);
 int32_t beep_ctrl_times(void *argc);
 int32_t green_led_toggle(void *argc);
-
+int32_t blue_led_toggle(void *argc);
 #endif // __DRV_IO_H__
