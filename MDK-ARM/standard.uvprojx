@@ -54,7 +54,7 @@
           <CreateLib>0</CreateLib>
           <CreateHexFile>0</CreateHexFile>
           <DebugInformation>1</DebugInformation>
-          <BrowseInformation>1</BrowseInformation>
+          <BrowseInformation>0</BrowseInformation>
           <ListingPath>..\build\MDK-ARM\</ListingPath>
           <HexFormatSelection>1</HexFormatSelection>
           <Merge32K>0</Merge32K>
@@ -339,7 +339,7 @@
               <MiscControls></MiscControls>
               <Define>USE_HAL_DRIVER,STM32F407xx,ARM_MATH_CM4,__FPU_USED=1U,__FPU_PRESENT=1U,__CC_ARM,ARM_MATH_MATRIX_CHECK,ARM_MATH_ROUNDING</Define>
               <Undefine></Undefine>
-              <IncludePath>..\bsp\cubemx\Core\Inc;..\bsp\cubemx\Drivers\STM32F4xx_HAL_Driver\Inc;..\bsp\cubemx\Drivers\STM32F4xx_HAL_Driver\Inc\Legacy;..\bsp\cubemx\Middlewares\Third_Party\FreeRTOS\Source\portable\RVDS\ARM_CM4F;..\bsp\cubemx\Middlewares\ST\STM32_USB_Device_Library\Core\Inc;..\bsp\cubemx\Middlewares\ST\STM32_USB_Device_Library\Class\CDC\Inc;..\bsp\cubemx\Drivers\CMSIS\Include;..\bsp\cubemx\Drivers\CMSIS\Device\ST\STM32F4xx\Include;..\bsp\cubemx\Middlewares\Third_Party\FreeRTOS\Source\include;..\bsp\cubemx\Middlewares\Third_Party\FreeRTOS\Source\CMSIS_RTOS;..\bsp\cubemx\USB_DEVICE\App;..\bsp\cubemx\USB_DEVICE\Target;..\bsp\boards;..\components\algorithm;..\components\devices;..\components\modules;..\components\object;..\components\support;..\application;..\components\controller;..\components\bmi088;..\components\bmi088\include;..\components\log;..\components\protocol;..\components\soft_timer;..\components\easyflash\inc;..\components\cli;..\components\event_mgr;..\application\chassis;..\components\referee;..\bsp\boards;..\components\systemview;..\application\gimbal</IncludePath>
+              <IncludePath>..\bsp\cubemx\Core\Inc;..\bsp\cubemx\Drivers\STM32F4xx_HAL_Driver\Inc;..\bsp\cubemx\Drivers\STM32F4xx_HAL_Driver\Inc\Legacy;..\bsp\cubemx\Middlewares\Third_Party\FreeRTOS\Source\portable\RVDS\ARM_CM4F;..\bsp\cubemx\Middlewares\ST\STM32_USB_Device_Library\Core\Inc;..\bsp\cubemx\Middlewares\ST\STM32_USB_Device_Library\Class\CDC\Inc;..\bsp\cubemx\Drivers\CMSIS\Include;..\bsp\cubemx\Drivers\CMSIS\Device\ST\STM32F4xx\Include;..\bsp\cubemx\Middlewares\Third_Party\FreeRTOS\Source\include;..\bsp\cubemx\Middlewares\Third_Party\FreeRTOS\Source\CMSIS_RTOS;..\bsp\cubemx\USB_DEVICE\App;..\bsp\cubemx\USB_DEVICE\Target;..\bsp\boards;..\components\algorithm;..\components\devices;..\components\modules;..\components\object;..\components\support;..\application;..\components\controller;..\components\bmi088;..\components\bmi088\include;..\components\log;..\components\protocol;..\components\soft_timer;..\components\easyflash\inc;..\components\cli;..\components\event_mgr;..\application\chassis;..\components\referee;..\bsp\boards;..\components\systemview;..\application\gimbal;..\application\auto</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -1152,6 +1152,16 @@
               <FileName>stm32f4xx_hal_rng.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\bsp\cubemx\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_rng.c</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>auto</GroupName>
+          <Files>
+            <File>
+              <FileName>speed_task.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\application\auto\speed_task.c</FilePath>
             </File>
           </Files>
         </Group>

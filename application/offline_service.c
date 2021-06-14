@@ -109,7 +109,7 @@ void offline_service(void const *argument)
         {
             display_event = NO_OFFLINE;
             beep_set_times(0);
-            LED_R_OFF();
+            //LED_R_OFF();
         }
 
         osDelay(20);

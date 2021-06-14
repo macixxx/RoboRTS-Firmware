@@ -23,7 +23,7 @@
 #include "event_mgr.h"
 #include "event.h"
 #include "os_timer.h"
-
+#include "log.h"
 struct pid_param turn_motor_param =
 {
     .p = 10.0f,
@@ -39,7 +39,7 @@ struct rc_device shoot_rc;
 
 int32_t shoot_firction_toggle(shoot_t p_shoot);
 
-void shoot_task(void const *argument)
+void shoot1_task(void const *argument)
 {
     uint32_t shoot_time = 0;
 
@@ -53,38 +53,44 @@ void shoot_task(void const *argument)
     soft_timer_register((soft_timer_callback)shoot_pid_calculate, (void *)&shoot, 5);
 
     shoot_pid_init(&shoot, "Shoot", turn_motor_param, DEVICE_CAN2);
-
+	log_printf("shoot task");
+	LED_R_ON();
     while (1)
     {
-        /* dr16 data update */
-        EventMsgProcess(&listSubs, 0);
+//		log_printf("OK!");
+//        /* dr16 data update */
+//        EventMsgProcess(&listSubs, 0);
 
-        if (rc_device_get_state(&shoot_rc, RC_S1_MID2UP) == E_OK)
-        {
-            shoot_firction_toggle(&shoot);
-        }
+//        if (rc_device_get_state(&shoot_rc, RC_S1_MID2UP) == E_OK)
+//        {
+//            shoot_firction_toggle(&shoot);
+//			log_printf("RC_S1_MID2UP");
+//			
+//        }
 
-        if (rc_device_get_state(&shoot_rc, RC_S1_MID2DOWN) == E_OK)
-        {
-            shoot_set_cmd(&shoot, SHOOT_ONCE_CMD, 1);
-            shoot_time = get_time_ms();
-        }
+//        if (rc_device_get_state(&shoot_rc, RC_S1_MID2DOWN) == E_OK)
+//        {
+//            shoot_set_cmd(&shoot, SHOOT_ONCE_CMD, 1);
+//            shoot_time = get_time_ms();
+//			log_printf("RC_S1_MID2DOWN");
+//        }
 
-        if (rc_device_get_state(&shoot_rc, RC_S2_DOWN) != E_OK)
-        {
-            if (rc_device_get_state(&shoot_rc, RC_S1_DOWN) == E_OK)
-            {
-                if (get_time_ms() - shoot_time > 2500)
-                {
-                    shoot_set_cmd(&shoot, SHOOT_CONTINUOUS_CMD, 0);
-                }
-            }
+//        if (rc_device_get_state(&shoot_rc, RC_S2_DOWN) != E_OK)
+//        {
+//            if (rc_device_get_state(&shoot_rc, RC_S1_DOWN) == E_OK)
+//            {
+//                if (get_time_ms() - shoot_time > 2500)
+//                {
+//                    shoot_set_cmd(&shoot, SHOOT_CONTINUOUS_CMD, 0);
+//                }
+//            }
 
-            if (rc_device_get_state(&shoot_rc, RC_S1_MID) == E_OK)
-            {
-                shoot_set_cmd(&shoot, SHOOT_STOP_CMD, 0);
-            }
-        }
+//            if (rc_device_get_state(&shoot_rc, RC_S1_MID) == E_OK)
+//            {
+//                shoot_set_cmd(&shoot, SHOOT_STOP_CMD, 0);
+//            }
+//			log_printf("RC_S2_DOWN");
+//        }
         osDelay(5);
     }
 }
@@ -103,6 +109,7 @@ int32_t shoot_firction_toggle(shoot_t p_shoot)
     toggle = ~toggle;
     return 0;
 }
+
 
 struct shoot *get_shoot(void)
 {

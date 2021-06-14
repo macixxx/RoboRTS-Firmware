@@ -22,8 +22,10 @@
 #include "protocol.h"
 #include "board.h"
 #include "easyflash.h"
+#include "speed_task.h"
 
 osThreadId chassis_task_t;
+osThreadId speed_task_t;
 
 static void chassis_can2_callback(uint16_t std_id, uint8_t *data, uint8_t dlc);
 static void chassis_user_key_handle(void);
@@ -118,6 +120,10 @@ void chassis_app_init(void)
 
     osThreadDef(CHASSIS_TASK, chassis_task, osPriorityNormal, 0, 512);
     chassis_task_t = osThreadCreate(osThread(CHASSIS_TASK), NULL);
+	
+	
+	osThreadDef(SPEED_TASK, speed_task, osPriorityNormal, 0, 512);
+	speed_task_t = osThreadCreate(osThread(SPEED_TASK), NULL);
 }
 
 /**
@@ -214,7 +220,7 @@ void chassis_heart_offline(void)
 
 void chassis_heart_online(void)
 {
-    LED_B_OFF();
+//    LED_B_OFF();
     set_chassis_heart_mode(CHASSIS_HEART_ON);
     offline_event_disable(OFFLINE_CHASSIS_MOTOR1);
     offline_event_disable(OFFLINE_CHASSIS_MOTOR2);
@@ -232,7 +238,7 @@ void chassis_control_offline(void)
 
 void chassis_control_online(void)
 {
-    LED_B_OFF();
+//    LED_B_OFF();
 }
 
 void gimbal_info_offline(void)

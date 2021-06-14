@@ -56,12 +56,25 @@
 #define MAX_WHEEL_RPM 8500 //8347rpm = 3500mm/s
 /* chassis maximum translation speed, unit is mm/s */
 // 3300
-#define MAX_CHASSIS_VX_SPEED 300 //8000rpm
-#define MAX_CHASSIS_VY_SPEED 300
+#define MAX_CHASSIS_VX_SPEED 3300 //8000rpm
+#define MAX_CHASSIS_VY_SPEED 3300
+
 /* chassis maximum rotation speed, unit is degree/s */
-#define MAX_CHASSIS_VW_SPEED 150 //5000rpm
+#define MAX_CHASSIS_VW_SPEED 300 //5000rpm
 
 #define MOTOR_ENCODER_ACCURACY 8192.0f
+
+#define HIGHT_CHASSIS_VX_SPEED 3300
+#define HIGHT_CHASSIS_VY_SPEED 3300
+#define HIGHT_CHASSIS_VW_SPEED 300
+
+#define MID_CHASSIS_VX_SPEED 1500
+#define MID_CHASSIS_VY_SPEED 1500
+#define MID_CHASSIS_VW_SPEED 150
+
+#define LOW_CHASSIS_VX_SPEED 300
+#define LOW_CHASSIS_VY_SPEED 300
+#define LOW_CHASSIS_VW_SPEED 150
 
 /**
   * @brief  infantry structure configuration information

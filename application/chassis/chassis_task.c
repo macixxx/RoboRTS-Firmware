@@ -37,6 +37,10 @@ struct pid_param chassis_motor_param =
 
 static void chassis_dr16_data_update(uint32_t eventID, void *pMsgData, uint32_t timeStamp);
 static int32_t chassis_angle_broadcast(void *argv);
+static void vEnableMotor(void);
+static void vLimitedSpeedControl(rc_info_t p_rc_info, uint16_t maxXSpeed, uint16_t maxYSpeed, uint16_t maxWSpeed);
+static int32_t speed_io_led_toggle(void *argc);
+
 
 struct chassis chassis;
 struct rc_device chassis_rc;
@@ -44,6 +48,8 @@ struct ahrs_sensor chassis_gyro;
 
 /* chassis speed */
 static float vx, vy, wz;
+static int status_led_period = 300;
+static int iSpeedMod = 0;
 
 /* fllow control */
 struct pid pid_follow = {0};
@@ -69,7 +75,8 @@ void chassis_task(void const *argument)
 
     soft_timer_register((soft_timer_callback)chassis_pid_calculate, (void *)&chassis, 5);
     soft_timer_register((soft_timer_callback)chassis_angle_broadcast, (void *)NULL, 10);
-
+	soft_timer_register(speed_io_led_toggle, &status_led_period, 5);
+	
     pid_struct_init(&pid_follow, MAX_CHASSIS_VW_SPEED, 50, 8.0f, 0.0f, 2.0f);
 
     while (1)
@@ -83,72 +90,20 @@ void chassis_task(void const *argument)
 
         if (rc_device_get_state(&chassis_rc, RC_S2_UP) == E_OK)
         {
-            vx = (float)p_rc_info->ch2 / 660 * MAX_CHASSIS_VX_SPEED;
-            vy = -(float)p_rc_info->ch1 / 660 * MAX_CHASSIS_VY_SPEED;
-            wz = -pid_calculate(&pid_follow, follow_relative_angle, 0);
-            chassis_set_offset(&chassis, ROTATE_X_OFFSET, ROTATE_Y_OFFSET);
-            chassis_set_acc(&chassis, 0, 0, 0);
-            chassis_set_speed(&chassis, vx, vy, wz);
-						//log_printf("RC_S2_UP\r\n");
-        }
-
+			vLimitedSpeedControl(p_rc_info, HIGHT_CHASSIS_VX_SPEED, HIGHT_CHASSIS_VY_SPEED, HIGHT_CHASSIS_VW_SPEED);
+			iSpeedMod = 2;
+		}
         if (rc_device_get_state(&chassis_rc, RC_S2_MID) == E_OK)
         {
-            vx = (float)p_rc_info->ch2 / 660 * MAX_CHASSIS_VX_SPEED;
-            vy = -(float)p_rc_info->ch1 / 660 * MAX_CHASSIS_VY_SPEED;
-            wz = -(float)p_rc_info->ch3 / 660 * MAX_CHASSIS_VW_SPEED;
-            chassis_set_offset(&chassis, 0, 0);
-            chassis_set_acc(&chassis, 0, 0, 0);
-            chassis_set_speed(&chassis, vx, vy, wz);
-						log_printf("RC_S2_MID\r\n");
-        }
-
-        if (rc_device_get_state(&chassis_rc, RC_S2_MID2DOWN) == E_OK)
-        {
-            chassis_set_speed(&chassis, 0, 0, 0);
-            chassis_set_acc(&chassis, 0, 0, 0);
-						//log_printf("RC_S2_MID2DOWN\r\n");
-        }
-
-        if (rc_device_get_state(&chassis_rc, RC_S2_MID2UP) == E_OK)
-        {
-            chassis_set_speed(&chassis, 0, 0, 0);
-            chassis_set_acc(&chassis, 0, 0, 0);
-						//log_printf("RC_S2_MID2UP\r\n");
-        }
-
+            vLimitedSpeedControl(p_rc_info, MID_CHASSIS_VX_SPEED, MID_CHASSIS_VY_SPEED, MID_CHASSIS_VW_SPEED);
+			iSpeedMod = 1;
+		}
         if (rc_device_get_state(&chassis_rc, RC_S2_DOWN) == E_OK)
         {
-            set_chassis_sdk_mode(CHASSIS_SDK_ON);
-            offline_event_enable(OFFLINE_MANIFOLD2_HEART);
-            offline_event_enable(OFFLINE_CONTROL_CMD);
-
-            if ((p_rc_info->ch1 < -400) && (p_rc_info->ch2 < -400) && (p_rc_info->ch3 > 400) && (p_rc_info->ch4 < -400))
-            {
-                static int cnt = 0;
-                cnt++;
-                /* 2 second */
-                if (cnt > 400)
-                {
-                    motor_auto_set_id(DEVICE_CAN2);
-                }
-            }
-						log_printf("RC_S2_DOWN\r\n");
-						
-        }
-        else
-        {
-            /* disable sdk */
-            set_chassis_sdk_mode(CHASSIS_SDK_OFF);
-            offline_event_disable(OFFLINE_MANIFOLD2_HEART);
-            offline_event_disable(OFFLINE_CONTROL_CMD);
-
-            offline_event_enable(OFFLINE_CHASSIS_MOTOR1);
-            offline_event_enable(OFFLINE_CHASSIS_MOTOR2);
-            offline_event_enable(OFFLINE_CHASSIS_MOTOR3);
-            offline_event_enable(OFFLINE_CHASSIS_MOTOR4);
-        }
-
+            vLimitedSpeedControl(p_rc_info, LOW_CHASSIS_VX_SPEED, LOW_CHASSIS_VY_SPEED, LOW_CHASSIS_VW_SPEED);
+			iSpeedMod = 0;
+		}
+		vEnableMotor();
         osDelay(5);
     }
 }
@@ -212,3 +167,59 @@ void set_follow_relative(float val)
 {
     follow_relative_angle = val;
 }
+
+static void vEnableMotor(void)
+{
+	/* disable sdk */
+	set_chassis_sdk_mode(CHASSIS_SDK_OFF);
+	offline_event_disable(OFFLINE_MANIFOLD2_HEART);
+	offline_event_disable(OFFLINE_CONTROL_CMD);
+
+	offline_event_enable(OFFLINE_CHASSIS_MOTOR1);
+	offline_event_enable(OFFLINE_CHASSIS_MOTOR2);
+	offline_event_enable(OFFLINE_CHASSIS_MOTOR3);
+	offline_event_enable(OFFLINE_CHASSIS_MOTOR4);
+}
+
+static void vLimitedSpeedControl(rc_info_t p_rc_info, uint16_t maxXSpeed, uint16_t maxYSpeed, uint16_t maxWSpeed)
+{
+	vx = (float)p_rc_info->ch2 / 660 * maxXSpeed;
+	vy = -(float)p_rc_info->ch1 / 660 * maxYSpeed;
+	wz = -(float)p_rc_info->ch3 / 660 * maxWSpeed;
+	chassis_set_offset(&chassis, 0, 0);
+	chassis_set_acc(&chassis, 0, 0, 0);
+	chassis_set_speed(&chassis, vx, vy, wz);	
+}
+
+
+int32_t speed_io_led_toggle(void *argc)
+{
+    static uint32_t led_tick;
+
+    if (get_time_ms() - led_tick > *(int *)argc)
+    {
+        switch (iSpeedMod)
+		{
+			// low speed
+			case 0:
+				LED_R_OFF();
+				LED_B_OFF();
+				LED_G_TOGGLE();
+				break;
+			case 1:
+				LED_R_OFF();
+				LED_G_OFF();
+				LED_B_TOGGLE();
+				break;
+			case 2:
+				LED_G_OFF();
+				LED_B_OFF();
+				LED_R_TOGGLE();
+				break;
+		}
+        led_tick = get_time_ms();
+    }
+
+    return 0;
+}
+

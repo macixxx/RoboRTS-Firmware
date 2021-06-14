@@ -184,7 +184,7 @@ uint32_t usart6_rx_callback(uint8_t *buff, uint16_t len)
     return 0;
 }
 
-static int status_led_period = 300;
+
 
 /**
   * @brief  type c board init
@@ -218,7 +218,7 @@ void board_config(void)
 
     soft_timer_register(usb_tx_flush, NULL, 1);
     soft_timer_register(beep_ctrl_times, NULL, 1);
-    soft_timer_register(green_led_toggle, &status_led_period, 5);
+    //soft_timer_register(green_led_toggle, &status_led_period, 5);
 
     motor_can_send_register(motor_canstd_send);
     soft_timer_register(motor_can_output_1ms, NULL, 1);

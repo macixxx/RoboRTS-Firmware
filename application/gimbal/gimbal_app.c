@@ -31,8 +31,11 @@
 #include "easyflash.h"
 #include "offline_service.h"
 
+#include "speed_task.h"
+
 osThreadId gimbal_task_t;
 osThreadId shoot_task_t;
+
 
 static void gimbal_can1_callback(uint16_t std_id, uint8_t *data, uint8_t dlc);
 static void gimbal_can2_callback(uint16_t std_id, uint8_t *data, uint8_t dlc);
@@ -121,7 +124,7 @@ void gimbal_app_init(void)
     osThreadDef(GIMBAL_TASK, gimbal_task, osPriorityNormal, 0, 512);
     gimbal_task_t = osThreadCreate(osThread(GIMBAL_TASK), NULL);
 
-    osThreadDef(SHOOT_TASK, shoot_task, osPriorityNormal, 0, 512);
+    osThreadDef(SHOOT_TASK, shoot1_task, osPriorityNormal, 0, 512);
     gimbal_task_t = osThreadCreate(osThread(SHOOT_TASK), NULL);
 }
 

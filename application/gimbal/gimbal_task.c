@@ -302,7 +302,7 @@ void gimbal_normol_handle(struct gimbal *p_gimbal, struct rc_device *p_rc, struc
     p_info->ch4 = -p_info->ch4;
 #endif
     /* follow mode */
-    if (rc_device_get_state(p_rc, RC_S2_UP) == E_OK)
+    if ((rc_device_get_state(p_rc, RC_S2_UP) == E_OK) || (rc_device_get_state(p_rc, RC_S2_MID) == E_OK) || (rc_device_get_state(p_rc, RC_S2_DOWN) == E_OK))
     {
         gimbal_set_yaw_mode(p_gimbal, GYRO_MODE);
 
@@ -312,42 +312,15 @@ void gimbal_normol_handle(struct gimbal *p_gimbal, struct rc_device *p_rc, struc
         gimbal_set_yaw_delta(p_gimbal, yaw_delta);
     }
 
-    /* encoder mode */
-    if (rc_device_get_state(p_rc, RC_S2_MID) == E_OK)
-    {
-        gimbal_set_yaw_mode(p_gimbal, ENCODER_MODE);
-        pit_delta = -(float)p_info->ch4 * 0.0015f;
-        gimbal_set_pitch_delta(p_gimbal, pit_delta);
+	/* disable sdk */
+	set_gimbal_sdk_mode(GIMBAL_SDK_OFF);
+	offline_event_disable(OFFLINE_MANIFOLD2_HEART);
+	offline_event_disable(OFFLINE_CONTROL_CMD);
 
-        if (rc_device_get_state(p_rc, RC_S2_UP2MID) == E_OK)
-        {
-            gimbal_set_yaw_angle(p_gimbal, 0, 0);
-        }
-    }
-
-    if (rc_device_get_state(p_rc, RC_S2_DOWN2MID) == E_OK)
-    {
-        gimbal_set_yaw_angle(p_gimbal, 0, 0);
-    }
-
-    if (rc_device_get_state(p_rc, RC_S2_DOWN) == E_OK)
-    {
-        set_gimbal_sdk_mode(GIMBAL_SDK_ON);
-        gimbal_set_yaw_mode(p_gimbal, ENCODER_MODE);
-        offline_event_enable(OFFLINE_MANIFOLD2_HEART);
-        offline_event_enable(OFFLINE_CONTROL_CMD);
-    }
-    else
-    {
-        /* disable sdk */
-        set_gimbal_sdk_mode(GIMBAL_SDK_OFF);
-        offline_event_disable(OFFLINE_MANIFOLD2_HEART);
-        offline_event_disable(OFFLINE_CONTROL_CMD);
-
-        offline_event_enable(OFFLINE_GIMBAL_PITCH);
-        offline_event_enable(OFFLINE_GIMBAL_YAW);
-        offline_event_enable(OFFLINE_GIMBAL_TURN_MOTOR);
-    }
+	offline_event_enable(OFFLINE_GIMBAL_PITCH);
+	offline_event_enable(OFFLINE_GIMBAL_YAW);
+	offline_event_enable(OFFLINE_GIMBAL_TURN_MOTOR);
+   
 }
 
 /**
