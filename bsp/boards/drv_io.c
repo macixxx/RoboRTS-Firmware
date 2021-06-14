@@ -108,7 +108,7 @@ int32_t beep_ctrl_times(void *argc)
 }
 
 /**
-  * @brief  toggle led when system is taking control via dbus interface.
+  * @brief  toggle led when system is taking control by dbus.
   * @param  toggle period(int), unit:ms
   * @retval
   */
@@ -127,7 +127,7 @@ int32_t green_led_toggle(void *argc)
 
 
 /**
-  * @brief  toggle led when system is taking control by computer.
+  * @brief  toggle led when system is taking control by uart1.
   * @param  toggle period(int), unit:ms
   * @retval
   */

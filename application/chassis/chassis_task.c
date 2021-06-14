@@ -25,6 +25,7 @@
 #include "event.h"
 #include "chassis.h"
 #include "offline_service.h"
+#include "log.h"
 
 struct pid_param chassis_motor_param =
 {
@@ -88,6 +89,7 @@ void chassis_task(void const *argument)
             chassis_set_offset(&chassis, ROTATE_X_OFFSET, ROTATE_Y_OFFSET);
             chassis_set_acc(&chassis, 0, 0, 0);
             chassis_set_speed(&chassis, vx, vy, wz);
+						//log_printf("RC_S2_UP\r\n");
         }
 
         if (rc_device_get_state(&chassis_rc, RC_S2_MID) == E_OK)
@@ -98,18 +100,21 @@ void chassis_task(void const *argument)
             chassis_set_offset(&chassis, 0, 0);
             chassis_set_acc(&chassis, 0, 0, 0);
             chassis_set_speed(&chassis, vx, vy, wz);
+						log_printf("RC_S2_MID\r\n");
         }
 
         if (rc_device_get_state(&chassis_rc, RC_S2_MID2DOWN) == E_OK)
         {
             chassis_set_speed(&chassis, 0, 0, 0);
             chassis_set_acc(&chassis, 0, 0, 0);
+						//log_printf("RC_S2_MID2DOWN\r\n");
         }
 
         if (rc_device_get_state(&chassis_rc, RC_S2_MID2UP) == E_OK)
         {
             chassis_set_speed(&chassis, 0, 0, 0);
             chassis_set_acc(&chassis, 0, 0, 0);
+						//log_printf("RC_S2_MID2UP\r\n");
         }
 
         if (rc_device_get_state(&chassis_rc, RC_S2_DOWN) == E_OK)
@@ -128,6 +133,8 @@ void chassis_task(void const *argument)
                     motor_auto_set_id(DEVICE_CAN2);
                 }
             }
+						log_printf("RC_S2_DOWN\r\n");
+						
         }
         else
         {
