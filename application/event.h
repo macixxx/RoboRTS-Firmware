@@ -32,6 +32,10 @@
 //UWB
 #define UWB_MSG   2
 #define UWB_MSG_LEN sizeof(struct uwb_data)
+	
+
+#define CONTROL_MSG 3
+#define CONTROL_MSG_LEN 12
 
 #endif //__EVENT_H__
 

@@ -121,7 +121,6 @@ void chassis_app_init(void)
     osThreadDef(CHASSIS_TASK, chassis_task, osPriorityNormal, 0, 512);
     chassis_task_t = osThreadCreate(osThread(CHASSIS_TASK), NULL);
 	
-	
 	osThreadDef(SPEED_TASK, speed_task, osPriorityNormal, 0, 512);
 	speed_task_t = osThreadCreate(osThread(SPEED_TASK), NULL);
 }

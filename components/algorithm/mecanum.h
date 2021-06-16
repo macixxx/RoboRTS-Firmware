@@ -76,6 +76,9 @@
 #define LOW_CHASSIS_VY_SPEED 300
 #define LOW_CHASSIS_VW_SPEED 150
 
+#define AUTO_CHASSIS_VX_SPEED LOW_CHASSIS_VX_SPEED
+#define AUTO_CHASSIS_VY_SPEED LOW_CHASSIS_VY_SPEED
+#define AUTO_CHASSIS_VW_SPEED LOW_CHASSIS_VW_SPEED
 /**
   * @brief  infantry structure configuration information
   */

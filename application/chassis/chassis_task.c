@@ -36,9 +36,13 @@ struct pid_param chassis_motor_param =
 };
 
 static void chassis_dr16_data_update(uint32_t eventID, void *pMsgData, uint32_t timeStamp);
+static void auto_control_data_update(uint32_t eventID, void *pMsgData, uint32_t timeStamp);
+
 static int32_t chassis_angle_broadcast(void *argv);
 static void vEnableMotor(void);
 static void vLimitedSpeedControl(rc_info_t p_rc_info, uint16_t maxXSpeed, uint16_t maxYSpeed, uint16_t maxWSpeed);
+static void vAutoSpeedControl(int ch1, int ch2, int ch3);
+static void vClearAutoSpeedData(void);
 static int32_t speed_io_led_toggle(void *argc);
 
 
@@ -51,6 +55,9 @@ static float vx, vy, wz;
 static int status_led_period = 300;
 static int iSpeedMod = 0;
 
+/*auto speed*/
+static int auto_channel[3];
+
 /* fllow control */
 struct pid pid_follow = {0};
 float follow_relative_angle;
@@ -59,11 +66,15 @@ void chassis_task(void const *argument)
 {
     rc_info_t p_rc_info;
 
-    subscriber_t listSubs;
+    subscriber_t listSubs1;
+	subscriber_t listSubs2;
     subscriber_t nolistSubs;
 
-    EventSubscribeInit(&listSubs, SUBS_MODE_NORMAL);
-    EventSubscribe(&listSubs, DBUS_MSG, DBUS_MSG_LEN, 3, chassis_dr16_data_update);
+    EventSubscribeInit(&listSubs1, SUBS_MODE_NORMAL);
+    EventSubscribe(&listSubs1, DBUS_MSG, DBUS_MSG_LEN, 3, chassis_dr16_data_update);
+
+	EventSubscribeInit(&listSubs2, SUBS_MODE_NORMAL);
+    EventSubscribe(&listSubs2, CONTROL_MSG, CONTROL_MSG_LEN, 3, auto_control_data_update);
 
     EventSubscribeInit(&nolistSubs, SUBS_MODE_NOLIST);
     EventSubscribe(&nolistSubs, AHRS_MSG, AHRS_MSG_LEN, 0, NULL);
@@ -82,27 +93,44 @@ void chassis_task(void const *argument)
     while (1)
     {
         /* dr16 data update */
-        EventMsgProcess(&listSubs, 0);
+        EventMsgProcess(&listSubs1, 0);
         /* gyro data update */
         EventMsgGetLast(&nolistSubs, AHRS_MSG, &chassis_gyro, NULL);
-
+	
+		/* control data update*/
+		EventMsgProcess(&listSubs2, 0);
+		
         chassis_gyro_updata(&chassis, chassis_gyro.yaw * RAD_TO_DEG, chassis_gyro.gz * RAD_TO_DEG);
-
-        if (rc_device_get_state(&chassis_rc, RC_S2_UP) == E_OK)
-        {
-			vLimitedSpeedControl(p_rc_info, HIGHT_CHASSIS_VX_SPEED, HIGHT_CHASSIS_VY_SPEED, HIGHT_CHASSIS_VW_SPEED);
-			iSpeedMod = 2;
+		
+		// 串口控制
+		if (rc_device_get_state(&chassis_rc, RC_S1_MID) == E_OK)
+		{
+			vAutoSpeedControl(auto_channel[0], auto_channel[1], auto_channel[2]);
+			iSpeedMod = 3;
 		}
-        if (rc_device_get_state(&chassis_rc, RC_S2_MID) == E_OK)
-        {
-            vLimitedSpeedControl(p_rc_info, MID_CHASSIS_VX_SPEED, MID_CHASSIS_VY_SPEED, MID_CHASSIS_VW_SPEED);
-			iSpeedMod = 1;
+		// Dbus控制
+		if (rc_device_get_state(&chassis_rc, RC_S1_DOWN) == E_OK)
+		{
+			if (rc_device_get_state(&chassis_rc, RC_S2_UP) == E_OK)
+			{
+				vLimitedSpeedControl(p_rc_info, HIGHT_CHASSIS_VX_SPEED, HIGHT_CHASSIS_VY_SPEED, HIGHT_CHASSIS_VW_SPEED);
+				iSpeedMod = 2;
+			}
+			if (rc_device_get_state(&chassis_rc, RC_S2_MID) == E_OK)
+			{
+				vLimitedSpeedControl(p_rc_info, MID_CHASSIS_VX_SPEED, MID_CHASSIS_VY_SPEED, MID_CHASSIS_VW_SPEED);
+				iSpeedMod = 1;
+			}
+			if (rc_device_get_state(&chassis_rc, RC_S2_DOWN) == E_OK)
+			{
+				vLimitedSpeedControl(p_rc_info, LOW_CHASSIS_VX_SPEED, LOW_CHASSIS_VY_SPEED, LOW_CHASSIS_VW_SPEED);
+				iSpeedMod = 0;
+			}
+			
+			// clear last auto speed data
+			vClearAutoSpeedData();
 		}
-        if (rc_device_get_state(&chassis_rc, RC_S2_DOWN) == E_OK)
-        {
-            vLimitedSpeedControl(p_rc_info, LOW_CHASSIS_VX_SPEED, LOW_CHASSIS_VY_SPEED, LOW_CHASSIS_VW_SPEED);
-			iSpeedMod = 0;
-		}
+        
 		vEnableMotor();
         osDelay(5);
     }
@@ -174,7 +202,7 @@ static void vEnableMotor(void)
 	set_chassis_sdk_mode(CHASSIS_SDK_OFF);
 	offline_event_disable(OFFLINE_MANIFOLD2_HEART);
 	offline_event_disable(OFFLINE_CONTROL_CMD);
-
+	
 	offline_event_enable(OFFLINE_CHASSIS_MOTOR1);
 	offline_event_enable(OFFLINE_CHASSIS_MOTOR2);
 	offline_event_enable(OFFLINE_CHASSIS_MOTOR3);
@@ -186,6 +214,9 @@ static void vLimitedSpeedControl(rc_info_t p_rc_info, uint16_t maxXSpeed, uint16
 	vx = (float)p_rc_info->ch2 / 660 * maxXSpeed;
 	vy = -(float)p_rc_info->ch1 / 660 * maxYSpeed;
 	wz = -(float)p_rc_info->ch3 / 660 * maxWSpeed;
+	
+	// Max 660
+	//log_printf("ch1:%.2f, ch2:%.2f, ch:%.2f\r\n", (float)p_rc_info->ch1, (float)p_rc_info->ch2, (float)p_rc_info->ch3);
 	chassis_set_offset(&chassis, 0, 0);
 	chassis_set_acc(&chassis, 0, 0, 0);
 	chassis_set_speed(&chassis, vx, vy, wz);	
@@ -216,10 +247,49 @@ int32_t speed_io_led_toggle(void *argc)
 				LED_B_OFF();
 				LED_R_TOGGLE();
 				break;
+			case 3:
+				LED_G_TOGGLE();
+				LED_B_TOGGLE();
+				LED_R_TOGGLE();
+				break;
 		}
         led_tick = get_time_ms();
     }
 
     return 0;
+}
+// 接收由shell收到的速度控制信息
+static void auto_control_data_update(uint32_t eventID, void *pMsgData, uint32_t timeStamp)
+{
+	int* channel;
+	channel = (int*)pMsgData;
+	
+	for (int i = 0; i < 3; i++)
+	{
+		int temp = *(channel + i);
+		auto_channel[i] = temp;
+	}
+	
+}
+
+static void vAutoSpeedControl(int ch1, int ch2, int ch3)
+{
+	vx = (float)ch2 / 660 * AUTO_CHASSIS_VX_SPEED;
+	vy = -(float)ch1 / 660 * AUTO_CHASSIS_VY_SPEED;
+	wz = -(float)ch3 / 660 * AUTO_CHASSIS_VW_SPEED;
+	
+	// Max 660
+	//log_printf("ch1:%.2f, ch2:%.2f, ch:%.2f\r\n", (float)p_rc_info->ch1, (float)p_rc_info->ch2, (float)p_rc_info->ch3);
+	chassis_set_offset(&chassis, 0, 0);
+	chassis_set_acc(&chassis, 0, 0, 0);
+	chassis_set_speed(&chassis, vx, vy, wz);	
+}
+
+static void vClearAutoSpeedData(void)
+{
+	for (int i = 0; i < 3; i++)
+	{
+		auto_channel[i] = 0;
+	}
 }
 

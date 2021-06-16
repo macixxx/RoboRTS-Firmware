@@ -24,8 +24,51 @@
 #include "fifo.h"
 #include "shell.h"
 
+#include "event_mgr.h"
+#include "event.h"
+
 /* 命令行密码 */
 #define CLI_PWD "robomaster"
+static publisher_t controlPub;
+
+//////control set
+int control_command(char *write_buf, int buf_len, const char *cmd_str);
+
+cli_cmd_t control_cmd =
+{
+    .cmd_str = "c",
+    .help_str = 
+	"\r\nc\r\n"
+	"\r\nControl command: include 3 parameters, ch1,ch2,ch3, < 660\r\n",
+    .cli_cmd_handler = control_command,
+    .expect_param_num = 3
+};
+
+int control_command(char *write_buf, int buf_len, const char *cmd_str)
+{
+	const char *param[3];
+    int param_len[3];
+	int temp = 0;
+	int channel[3];
+	
+	
+	// parse input paramater and convert it to short type
+	for (int i = 0; i < 3; i++)
+	{
+		param[i] = cli_get_param(cmd_str, i + 1, &param_len[i]);
+		temp = atoi(param[i]);
+		if (temp > 660) temp = 660;
+		if (temp < -660) temp = -660;
+		channel[i] = temp;
+	}
+    cli_get_param_end(cmd_str);
+	log_printf("post %d %d %d\r\n", channel[0], channel[1], channel[2]);
+	
+	EventMsgPost(&controlPub, (void*)(&channel[0]), CONTROL_MSG_LEN);
+	
+	return 0;
+}
+
 
 /************************************** 系统密码 ************************************/
 int pwd_command(char *write_buf, int buf_len, const char *cmd_str);
@@ -91,10 +134,14 @@ int env_command(char *write_buf, int buf_len, const char *cmd_str)
     return 0;
 }
 
+
+
 void cli_cmd_init(void)
 {
     cli_cmd_register(&pwd_cmd);
     cli_cmd_register(&env_cmd);
+	
+	cli_cmd_register(&control_cmd);
 }
 
 /*---------------------------------------------------------------------------------------------------------------------------*/
@@ -128,8 +175,12 @@ osThreadId shell_task_t;
 int thread_cli_init(void)
 {
     fifo_s_init(&shell_fifo, shell_buf, CMD_BUFSIZE);
+	
     osThreadDef(SHELL_TASK, pthread_cli, osPriorityNormal, 0, 512);
     shell_task_t = osThreadCreate(osThread(SHELL_TASK), NULL);
+	// Control massage publisher init
+	EventPostInit(&controlPub, CONTROL_MSG, CONTROL_MSG_LEN);
+	
     return 0;
 }
 

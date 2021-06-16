@@ -33,6 +33,16 @@
 
 #include "log.h"
 
+const char *loading_text =
+"\r\n \
+ \\___________________\\ \r\n \
+         _^___ \r\n \
+ L    __/   [] \\ \r\n \
+LOL===__        \\ \r\n \
+ L      \\________] \r\n \
+         I   I       \r\n \
+";
+
 static struct app_manage *board_app;
 
 static publisher_t dbusPub;
@@ -195,12 +205,10 @@ void board_config(void)
 {
     /* system log */
     usart1_manage_init();
-    log_printf("\r\n\r\n"
-               "***********RoboMaster AI Robot**************\r\n");
-    log_printf("* Copy right: All right reserved.\r\n");
-    log_printf("* Release Time: %s.\r\n", __TIME__);
-    log_printf("********************************************\r\n");
-
+    
+	log_printf("%s",loading_text);
+	log_printf("\r\n      2021-06-16      \r\n  ");
+	log_printf("\r\n         Macix        \r\n");
     board_app = get_current_app();
 
     soft_timer_init();
