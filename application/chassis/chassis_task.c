@@ -272,6 +272,7 @@ static void auto_control_data_update(uint32_t eventID, void *pMsgData, uint32_t 
 	
 }
 
+// 设置行驶速度
 static void vAutoSpeedControl(int ch1, int ch2, int ch3)
 {
 	vx = (float)ch2 / 660 * AUTO_CHASSIS_VX_SPEED;
@@ -285,6 +286,7 @@ static void vAutoSpeedControl(int ch1, int ch2, int ch3)
 	chassis_set_speed(&chassis, vx, vy, wz);	
 }
 
+//清除由shell 接收到的速度控制信息
 static void vClearAutoSpeedData(void)
 {
 	for (int i = 0; i < 3; i++)

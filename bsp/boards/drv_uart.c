@@ -178,6 +178,7 @@ void HAL_UART_RxHalfCpltCallback(UART_HandleTypeDef *huart)
 {
     if (huart == &huart1)
     {
+			
         usart_rec_to_buff(&usart1_manage_obj, INTERRUPT_TYPE_DMA_HALF);
     }
     else if (huart == &huart6)
